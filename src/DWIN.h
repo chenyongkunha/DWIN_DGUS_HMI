@@ -72,16 +72,10 @@ public:
     void beepHMI();
     // Callback Function
     typedef void (*hmiListener) (String address, int lastByte, String message, String response);
+
     // CallBack Method
     void hmiCallBack(hmiListener callBackFunction);
-    //get Data on  AsciiData Address
-    String getAsciiData(long address, int dataLen);
-    //set Data on  AsciiData Address
-    void setAsciiData(long address, String data);
-    //set Data on  VARIABLE Address
-    void setVARIABLE(uint16_t addr, uint16_t data);
-    //get Data on  VARIABLE Address
-    uint16_t getVARIABLE(uint16_t addr);
+
 
 private:
 
