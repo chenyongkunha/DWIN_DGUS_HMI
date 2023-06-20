@@ -68,6 +68,14 @@ public:
     void setText(long address, String textData);
     // set Byte on VP Address
     void setVP(long address, byte data);
+    //get Data on  AsciiData Address
+    String getAsciiData(long address, int dataLen);
+    //set Data on  AsciiData Address
+    void setAsciiData(long address, String data);
+    //get Data on  VARIABLE Address
+    uint16_t getVARIABLE(uint16_t addr);
+    //set Data on  VARIABLE Address
+    void setVARIABLE(uint16_t addr, uint16_t data);
     // beep Buzzer for 1 sec
     void beepHMI();
     // Callback Function
@@ -76,6 +84,10 @@ public:
     // CallBack Method
     void hmiCallBack(hmiListener callBackFunction);
 
+   
+    
+    
+    
 
 private:
 

@@ -124,6 +124,103 @@ void DWIN::setVP(long address, byte data){
     readDWIN();
 }
 
+// Get Data on ascii Address
+String DWIN::getAsciiData(long address, int dataLen)
+{
+
+    byte startCMD[] = {0x5a, 0xa5, 0x04, 0x83, (uint8_t)(address >> 8), (uint8_t)address, dataLen};
+
+    byte sendBuffer[sizeof(startCMD)];
+    memcpy(sendBuffer, startCMD, sizeof(startCMD));
+    _dwinSerial->write(sendBuffer, sizeof(sendBuffer));
+
+    while (_dwinSerial->available() < 8)
+    {
+    } // wait until at least 8 bytes data available
+
+    for (int i = 0; i < 7; i++) // read the first 7 useless bytes
+    {
+        uint8_t data = _dwinSerial->read();
+    }
+
+    String result = "";
+    for (int i = 0; i < dataLen; i++) // read the actual requested data
+    {
+        if (_dwinSerial->available())
+        {
+            char c = _dwinSerial->read();                         // read one byte
+            if ((c >= ' ' && c <= '~') || c == '\n' || c == '\r') // check if it's a printable ascii character or line feed/carriage return
+            {
+                result += c;
+            }
+            else // if it's not a printable ascii character, return current result
+            {
+                return result;
+            }
+        }
+    }
+    
+    return result;
+}
+
+// Set Data on ascii Address
+void DWIN::setAsciiData(long address, String data)
+{
+
+    // Convert the string to ASCII code and store it in an array
+    byte asciiData[data.length()];
+
+    for (int i = 0; i < data.length(); i++) {
+        asciiData[i] = data.charAt(i);
+    }
+
+    // Construct the start command byte array, and add address and data length
+
+    byte startCMD[] = {0x5a, 0xa5, data.length()+3, CMD_WRITE, (uint8_t)(address >> 8), (uint8_t)address};
+
+    // Combine the start command and ASCII code data into one byte array, and send it out
+    byte sendBuffer[sizeof(startCMD) + data.length()];
+    memcpy(sendBuffer, startCMD, sizeof(startCMD));
+    memcpy(&sendBuffer[sizeof(startCMD)], asciiData, data.length());
+
+    _dwinSerial->write(sendBuffer, sizeof(sendBuffer));
+    readDWIN();
+}
+
+// Get data on VARIABLE Address
+uint16_t DWIN::getVARIABLE(uint16_t addr)
+{
+
+    byte sendBuffer[] = {0x5a, 0xa5, 0x04, 0x83, (uint8_t)(addr >> 8), (uint8_t)addr, 0x01};
+    _dwinSerial->write(sendBuffer, sizeof(sendBuffer));
+
+    while (_dwinSerial->available() < 8)
+    {
+    } // Wait until at least 8 bytes of data are available
+
+    for (int i = 0; i < 7; i++)
+    {
+        uint8_t data = _dwinSerial->read();  // Read the first 7 useless bytes
+    }
+
+    // Read effective data, merge and process the data
+    uint8_t data1 = _dwinSerial->read(); 
+    uint8_t data2 = _dwinSerial->read();
+    uint16_t data3 = data1 << 8 | data2;
+
+    // Return the merged data
+    return data3;
+}
+
+// Set data on VARIABLE Address
+void DWIN::setVARIABLE(uint16_t addr, uint16_t data)
+{
+    // 5A A5 07 82 00 84 5a 01 00 02
+    byte sendBuffer[] = {CMD_HEAD1, CMD_HEAD2, 0x05, CMD_WRITE, (uint8_t)(addr >> 8), (uint8_t)addr,(data >> 8) & 0xFF,data & 0xFF};
+    _dwinSerial->write(sendBuffer, sizeof(sendBuffer));
+    readDWIN();
+}
+
 // beep Buzzer for 1 Sec
 void DWIN::beepHMI(){
     // 0x5A, 0xA5, 0x05, 0x82, 0x00, 0xA0, 0x00, 0x7D
